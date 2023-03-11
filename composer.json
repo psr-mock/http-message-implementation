@@ -1,0 +1,46 @@
+{
+    "name": "psr-mock/http-message-implementation",
+    "description": "Lightweight PSR-7 HTTP Message implementation provider tailored to simplify mocked testing.",
+    "license": "MIT",
+    "type": "library",
+    "keywords": [
+        "psr",
+        "http-message-implementation",
+        "psr-7",
+        "testing",
+        "mocking"
+    ],
+    "authors": [
+        {
+            "name": "Evan Sims",
+            "email": "hello@evansims.com",
+            "homepage": "https://evansims.com/"
+        }
+    ],
+    "homepage": "https://github.com/psr-mock/http-message-implementation",
+    "require": {
+        "php": "^8.0",
+        "psr/http-message": "^1.0"
+    },
+    "provide": {
+        "psr/http-message-implementation": "^1.0"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "PsrMock\\Psr7\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PsrMock\\Psr7\\Tests\\": "tests"
+        }
+    },
+    "config": {
+        "allow-plugins": {},
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    }
+}
