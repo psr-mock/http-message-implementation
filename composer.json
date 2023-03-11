@@ -1,6 +1,6 @@
 {
     "name": "psr-mock/http-message-implementation",
-    "description": "Lightweight PSR-7 HTTP Message implementation provider tailored to simplify mocked testing.",
+    "description": "Lightweight PSR-7 HTTP Message implementations provider tailored to simplify mocked testing.",
     "license": "MIT",
     "type": "library",
     "keywords": [
