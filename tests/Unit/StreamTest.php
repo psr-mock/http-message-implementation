@@ -137,3 +137,10 @@ test('getMetadata() returns an array', function () {
     expect($stream->getMetadata())
         ->toBeArray();
 });
+
+test('getMetadata() returns null with a bad key', function () {
+    $stream = new Stream();
+
+    expect($stream->getMetadata(uniqid()))
+        ->toBeNull();
+});
