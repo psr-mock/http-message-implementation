@@ -10,7 +10,7 @@ on:
       - review_requested
   push:
     branches:
-      - v1.x
+      - 1.x
 
 jobs:
   run:
