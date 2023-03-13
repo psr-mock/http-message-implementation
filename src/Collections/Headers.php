@@ -51,6 +51,8 @@ final class Headers
     }
 
     /**
+     * @param string $name The header name.
+     *
      * @return string[]
      */
     public function get(string $name): array
@@ -68,9 +70,11 @@ final class Headers
     }
 
     /**
+     * @palm-suppress MixedInferredReturnType
+     *
+     * @param string $name The header name.
      *
      * @return Header[]
-     * @palm-suppress MixedInferredReturnType
      */
     public function getHeader(string $name): array
     {

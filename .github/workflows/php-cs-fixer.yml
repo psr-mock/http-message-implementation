@@ -15,12 +15,12 @@ on:
 jobs:
   run:
     name: php-cs-fixer
-    runs-on: ${{ matrix.operating-system }}
+    runs-on: ${{ matrix.operating-systems }}
 
     strategy:
       fail-fast: false
       matrix:
-        operating-system:
+        operating-systems:
           - ubuntu-latest
           - windows-latest
           - macos-latest
