@@ -416,7 +416,7 @@ return static function (RectorConfig $rectorConfig): void {
         MixedTypeRector::class,
         MultipleClassFileToPsr4ClassesRector::class,
         NarrowUnionTypeDocRector::class,
-        NewlineAfterStatementRector::class,
+        // NewlineAfterStatementRector::class,
         NewlineBeforeNewAssignSetRector::class,
         NewStaticToNewSelfRector::class,
         NormalizeNamespaceByPSR4ComposerAutoloadRector::class,
