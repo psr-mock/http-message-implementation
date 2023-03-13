@@ -208,7 +208,7 @@ final class Stream implements StreamContract, StreamInterface, Stringable
                 $stats = fstat($this->stream);
 
                 if (is_array($stats)) {
-                    $this->isPipe = ($stats['mode'] & 0o010000) !== 0;
+                    $this->isPipe = ($stats['mode'] & octdec('0010000')) !== 0;
                 }
             }
         }
