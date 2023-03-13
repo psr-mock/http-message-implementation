@@ -83,9 +83,24 @@ use Rector\CodeQuality\Rector\Ternary\{ArrayKeyExistsTernaryThenValueToCoalescin
     SwitchNegatedTernaryRector,
     TernaryEmptyArrayArrayDimFetchToCoalesceRector,
     UnnecessaryTernaryExpressionRector};
-use Rector\CodingStyle\Rector\ClassMethod\FuncGetArgsToVariadicParamRector;
-use Rector\CodingStyle\Rector\FuncCall\{CallUserFuncToMethodCallRector,
-    CountArrayToEmptyArrayComparisonRector};
+use Rector\CodingStyle\Rector\ArrowFunction\StaticArrowFunctionRector;
+use Rector\CodingStyle\Rector\Assign\SplitDoubleAssignRector;
+use Rector\CodingStyle\Rector\Catch_\CatchExceptionNameMatchingTypeRector;
+use Rector\CodingStyle\Rector\Class_\AddArrayDefaultToArrayPropertyRector;
+use Rector\CodingStyle\Rector\ClassConst\{RemoveFinalFromConstRector, SplitGroupedClassConstantsRector, VarConstantCommentRector};
+use Rector\CodingStyle\Rector\ClassMethod\{FuncGetArgsToVariadicParamRector, MakeInheritedMethodVisibilitySameAsParentRector, NewlineBeforeNewAssignSetRector, RemoveDoubleUnderscoreInMethodNameRector, UnSpreadOperatorRector};
+use Rector\CodingStyle\Rector\Closure\StaticClosureRector;
+use Rector\CodingStyle\Rector\Encapsed\{EncapsedStringsToSprintfRector, WrapEncapsedVariableInCurlyBracesRector};
+use Rector\CodingStyle\Rector\FuncCall\{CallUserFuncArrayToVariadicRector, CallUserFuncToMethodCallRector, ConsistentImplodeRector, ConsistentPregDelimiterRector, CountArrayToEmptyArrayComparisonRector, StrictArraySearchRector, VersionCompareFuncCallToConstantRector};
+use Rector\CodingStyle\Rector\If_\NullableCompareToNullRector;
+use Rector\CodingStyle\Rector\Plus\UseIncrementAssignRector;
+use Rector\CodingStyle\Rector\PostInc\PostIncDecToPreIncDecRector;
+use Rector\CodingStyle\Rector\Property\{AddFalseDefaultToBoolPropertyRector, SplitGroupedPropertiesRector};
+use Rector\CodingStyle\Rector\Stmt\NewlineAfterStatementRector;
+use Rector\CodingStyle\Rector\String_\{SymplifyQuoteEscapeRector, UseClassKeywordForClassNameResolutionRector};
+use Rector\CodingStyle\Rector\Switch_\BinarySwitchToIfElseRector;
+use Rector\CodingStyle\Rector\Ternary\TernaryConditionVariableAssignmentRector;
+use Rector\CodingStyle\Rector\Use_\SeparateMultiUseImportsRector;
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\Array_\RemoveDuplicatedArrayKeyRector;
 use Rector\DeadCode\Rector\Assign\{RemoveDoubleAssignRector,
@@ -150,6 +165,7 @@ use Rector\Naming\Rector\ClassMethod\{RenameParamToMatchTypeRector,
 use Rector\Naming\Rector\Foreach_\{RenameForeachValueVariableToMatchExprVariableRector,
     RenameForeachValueVariableToMatchMethodCallReturnTypeRector};
 use Rector\Php52\Rector\Property\VarToPublicPropertyRector;
+use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\Php71\Rector\FuncCall\RemoveExtraParametersRector;
 use Rector\Php80\Rector\Catch_\RemoveUnusedVariableInCatchRector;
 use Rector\Php80\Rector\Class_\{ClassPropertyAssignToConstructorPromotionRector,
@@ -179,6 +195,7 @@ use Rector\Privatization\Rector\Property\{ChangeReadOnlyPropertyWithDefaultValue
 use Rector\PSR4\Rector\FileWithoutNamespace\NormalizeNamespaceByPSR4ComposerAutoloadRector;
 use Rector\PSR4\Rector\Namespace_\MultipleClassFileToPsr4ClassesRector;
 use Rector\Renaming\Rector\FuncCall\RenameFunctionRector;
+use Rector\Transform\Rector\FuncCall\FuncCallToConstFetchRector;
 use Rector\Transform\Rector\StaticCall\StaticCallToFuncCallRector;
 use Rector\Transform\ValueObject\StaticCallToFuncCall;
 use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
@@ -306,15 +323,28 @@ return static function (RectorConfig $rectorConfig): void {
         ],
     );
 
+    $rectorConfig->ruleWithConfiguration(
+        FuncCallToConstFetchRector::class,
+        [
+            'php_sapi_name' => 'PHP_SAPI',
+            'pi'            => 'M_PI'
+        ],
+    );
+
     $rectorConfig->rules([
+        // AddParamTypeFromPropertyTypeRector::class,
+        // ChangeOrIfReturnToEarlyReturnRector::class,
+        // RemoveAlwaysTrueIfConditionRector::class,
+        // RenameParamToMatchTypeRector::class,
         AbsolutizeRequireAndIncludePathRector::class,
         ActionInjectionToConstructorInjectionRector::class,
+        AddArrayDefaultToArrayPropertyRector::class,
         AddArrowFunctionReturnTypeRector::class,
         AddClosureReturnTypeRector::class,
+        AddFalseDefaultToBoolPropertyRector::class,
         AddMethodCallBasedStrictParamTypeRector::class,
         AddParamBasedOnParentClassMethodRector::class,
         AddParamTypeBasedOnPHPUnitDataProviderRector::class,
-        // AddParamTypeFromPropertyTypeRector::class,
         AddParamTypeSplFixedArrayRector::class,
         AddPregQuoteDelimiterRector::class,
         AddReturnTypeDeclarationBasedOnParentClassMethodRector::class,
@@ -325,11 +355,15 @@ return static function (RectorConfig $rectorConfig): void {
         ArrayKeysAndInArrayToArrayKeyExistsRector::class,
         ArrayMergeOfNonArraysToSimpleArrayRector::class,
         ArrayShapeFromConstantArrayReturnRector::class,
+        BinarySwitchToIfElseRector::class,
         BooleanNotIdenticalToNotIdenticalRector::class,
         BoolvalToTypeCastRector::class,
         CallableThisArrayToAnonymousFunctionRector::class,
+        CallUserFuncArrayToVariadicRector::class,
+        CallUserFuncToMethodCallRector::class,
         CallUserFuncToMethodCallRector::class,
         CallUserFuncWithArrowFunctionToInlineRector::class,
+        CatchExceptionNameMatchingTypeRector::class,
         ChangeAndIfToEarlyReturnRector::class,
         ChangeArrayPushToArrayAssignRector::class,
         ChangeGlobalVariablesToPropertiesRector::class,
@@ -337,7 +371,6 @@ return static function (RectorConfig $rectorConfig): void {
         ChangeNestedForeachIfsToEarlyContinueRector::class,
         ChangeNestedIfsToEarlyReturnRector::class,
         ChangeOrIfContinueToMultiContinueRector::class,
-        // ChangeOrIfReturnToEarlyReturnRector::class,
         ChangeReadOnlyPropertyWithDefaultValueToConstantRector::class,
         ChangeReadOnlyVariableWithDefaultValueToConstantRector::class,
         ChangeSwitchToMatchRector::class,
@@ -350,8 +383,12 @@ return static function (RectorConfig $rectorConfig): void {
         CompactToVariablesRector::class,
         CompleteDynamicPropertiesRector::class,
         ConsecutiveNullCompareReturnsToNullCoalesceQueueRector::class,
+        ConsistentImplodeRector::class,
+        ConsistentPregDelimiterRector::class,
+        CountArrayToEmptyArrayComparisonRector::class,
         CountArrayToEmptyArrayComparisonRector::class,
         EmptyOnNullableObjectToInstanceOfRector::class,
+        EncapsedStringsToSprintfRector::class,
         ExplicitBoolCompareRector::class,
         ExplicitMethodCallOverMagicGetSetRector::class,
         FinalizeClassesWithoutChildrenRector::class,
@@ -362,6 +399,7 @@ return static function (RectorConfig $rectorConfig): void {
         ForeachToInArrayRector::class,
         ForRepeatedCountToOwnVariableRector::class,
         ForToForeachRector::class,
+        FuncGetArgsToVariadicParamRector::class,
         FuncGetArgsToVariadicParamRector::class,
         GetClassToInstanceOfRector::class,
         GetDebugTypeRector::class,
@@ -374,11 +412,15 @@ return static function (RectorConfig $rectorConfig): void {
         IssetOnPropertyObjectToPropertyExistsRector::class,
         JoinStringConcatRector::class,
         LogicalToBooleanRector::class,
+        MakeInheritedMethodVisibilitySameAsParentRector::class,
         MixedTypeRector::class,
         MultipleClassFileToPsr4ClassesRector::class,
         NarrowUnionTypeDocRector::class,
+        NewlineAfterStatementRector::class,
+        NewlineBeforeNewAssignSetRector::class,
         NewStaticToNewSelfRector::class,
         NormalizeNamespaceByPSR4ComposerAutoloadRector::class,
+        NullableCompareToNullRector::class,
         OptionalParametersAfterRequiredRector::class,
         OptionalParametersAfterRequiredRector::class,
         ParamAnnotationIncorrectNullableRector::class,
@@ -386,6 +428,7 @@ return static function (RectorConfig $rectorConfig): void {
         ParamTypeByParentCallTypeRector::class,
         ParamTypeFromStrictTypedPropertyRector::class,
         Php8ResourceReturnToObjectRector::class,
+        PostIncDecToPreIncDecRector::class,
         PreparedValueToEarlyReturnRector::class,
         PrivatizeFinalClassMethodRector::class,
         PrivatizeFinalClassPropertyRector::class,
@@ -394,7 +437,6 @@ return static function (RectorConfig $rectorConfig): void {
         RecastingRemovalRector::class,
         RemoveAlwaysElseRector::class,
         RemoveAlwaysTrueConditionSetInConstructorRector::class,
-        // RemoveAlwaysTrueIfConditionRector::class,
         RemoveAndTrueRector::class,
         RemoveConcatAutocastRector::class,
         RemoveDeadConditionAboveReturnRector::class,
@@ -408,6 +450,7 @@ return static function (RectorConfig $rectorConfig): void {
         RemoveDeadZeroAndOneOperationRector::class,
         RemoveDelegatingParentCallRector::class,
         RemoveDoubleAssignRector::class,
+        RemoveDoubleUnderscoreInMethodNameRector::class,
         RemoveDuplicatedArrayKeyRector::class,
         RemoveDuplicatedCaseInSwitchRector::class,
         RemoveDuplicatedIfReturnRector::class,
@@ -416,6 +459,7 @@ return static function (RectorConfig $rectorConfig): void {
         RemoveEmptyMethodCallRector::class,
         RemoveEmptyTestMethodRector::class,
         RemoveExtraParametersRector::class,
+        RemoveFinalFromConstRector::class,
         RemoveJustPropertyFetchForAssignRector::class,
         RemoveJustVariableAssignRector::class,
         RemoveLastReturnRector::class,
@@ -440,7 +484,6 @@ return static function (RectorConfig $rectorConfig): void {
         RemoveUselessVarTagRector::class,
         RenameForeachValueVariableToMatchExprVariableRector::class,
         RenameForeachValueVariableToMatchMethodCallReturnTypeRector::class,
-        // RenameParamToMatchTypeRector::class,
         RenamePropertyToMatchTypeRector::class,
         RenameVariableToMatchMethodCallReturnTypeRector::class,
         RenameVariableToMatchNewTypeRector::class,
@@ -461,6 +504,7 @@ return static function (RectorConfig $rectorConfig): void {
         ReturnTypeFromStrictTernaryRector::class,
         ReturnTypeFromStrictTypedCallRector::class,
         ReturnTypeFromStrictTypedPropertyRector::class,
+        SeparateMultiUseImportsRector::class,
         SetStateToStaticRector::class,
         SetTypeToCastRector::class,
         ShortenElseIfRector::class,
@@ -489,14 +533,23 @@ return static function (RectorConfig $rectorConfig): void {
         SimplifyUselessVariableRector::class,
         SingleInArrayToCompareRector::class,
         SingularSwitchToIfRector::class,
+        SplitDoubleAssignRector::class,
+        SplitGroupedClassConstantsRector::class,
+        SplitGroupedPropertiesRector::class,
         SplitListAssignToSeparateLineRector::class,
+        StaticArrowFunctionRector::class,
+        StaticClosureRector::class,
         StrContainsRector::class,
         StrEndsWithRector::class,
+        StrictArraySearchRector::class,
         StringableForToStringRector::class,
+        StringClassNameToClassConstantRector::class,
         StrlenZeroToIdenticalEmptyStringRector::class,
         StrStartsWithRector::class,
         StrvalToTypeCastRector::class,
         SwitchNegatedTernaryRector::class,
+        SymplifyQuoteEscapeRector::class,
+        TernaryConditionVariableAssignmentRector::class,
         TernaryEmptyArrayArrayDimFetchToCoalesceRector::class,
         TernaryFalseExpressionToIfRector::class,
         TernaryToBooleanOrFalseToBooleanAndRector::class,
@@ -508,11 +561,17 @@ return static function (RectorConfig $rectorConfig): void {
         TypedPropertyFromStrictSetUpRector::class,
         UnionTypesRector::class,
         UnnecessaryTernaryExpressionRector::class,
+        UnSpreadOperatorRector::class,
         UnusedForeachValueToArrayKeysRector::class,
         UnwrapFutureCompatibleIfPhpVersionRector::class,
         UnwrapSprintfOneArgumentRector::class,
+        UseClassKeywordForClassNameResolutionRector::class,
         UseIdenticalOverEqualWithSameTypeRector::class,
+        UseIncrementAssignRector::class,
         VarAnnotationIncorrectNullableRector::class,
+        VarConstantCommentRector::class,
         VarToPublicPropertyRector::class,
+        VersionCompareFuncCallToConstantRector::class,
+        WrapEncapsedVariableInCurlyBracesRector::class,
     ]);
 };
