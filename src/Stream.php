@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace PsrMock\Psr7;
 
+use const SEEK_SET;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
-use Stringable;
 
+use Stringable;
+use function array_key_exists;
 use function fclose;
 use function feof;
 use function fread;
@@ -21,44 +23,23 @@ use function is_resource;
 use function is_string;
 use function pclose;
 use function rewind;
+
 use function stream_get_contents;
 use function stream_get_meta_data;
 
-use const SEEK_SET;
-
 final class Stream implements StreamInterface, Stringable
 {
-    public const FSTAT_MODE_S_IFIFO = 0010000;
+    public const FSTAT_MODE_S_IFIFO = 0o010000;
 
     /**
-     * @var resource|null
-     */
-    private $stream;
-
-    /**
-     * @var array<mixed>|null
-     */
-    private ?array $meta = null;
-
-    private ?bool $readable = null;
-
-    private ?bool $writable = null;
-
-    private ?bool $seekable = null;
-
-    private ?int $size = null;
-
-    private ?bool $isPipe = null;
-
-    /**
-     * @param  resource|string         $stream A PHP resource handle.
+     * @param resource|string $stream A PHP resource handle.
      *
      * @throws InvalidArgumentException If argument is not a resource.
      */
     public function __construct(
-        $stream = null
+        $stream = null,
     ) {
-        $resource = is_resource($stream) ? $stream : fopen('php://temp', 'wr+');
+        $resource = is_resource($stream) ? $stream : fopen('php://temp', 'r+wb');
 
         // @codeCoverageIgnoreStart
         if (false === $resource) {
@@ -78,24 +59,19 @@ final class Stream implements StreamInterface, Stringable
         }
     }
 
-    /**
-     * @return array<string>|mixed
-     */
-    public function getMetadata($key = null): mixed
+    public function __toString(): string
     {
         // @codeCoverageIgnoreStart
         if (! is_resource($this->stream)) {
-            return null;
+            return '';
         }
         // @codeCoverageIgnoreEnd
 
-        $this->meta = stream_get_meta_data($this->stream);
-
-        if (null === $key) {
-            return $this->meta;
+        if ($this->isSeekable()) {
+            $this->rewind();
         }
 
-        return array_key_exists($key, $this->meta) ? $this->meta[$key] : null;
+        return $this->getContents();
     }
 
     /**
@@ -125,40 +101,6 @@ final class Stream implements StreamInterface, Stringable
     /**
      * @codeCoverageIgnore
      */
-    public function detach(): mixed
-    {
-        $oldResource = $this->stream;
-
-        $this->stream = null;
-        $this->meta = null;
-        $this->readable = null;
-        $this->writable = null;
-        $this->seekable = null;
-        $this->size = null;
-        $this->isPipe = null;
-
-        return $oldResource;
-    }
-
-
-    public function __toString(): string
-    {
-        // @codeCoverageIgnoreStart
-        if (! is_resource($this->stream)) {
-            return '';
-        }
-        // @codeCoverageIgnoreEnd
-
-        if ($this->isSeekable()) {
-            $this->rewind();
-        }
-
-        return $this->getContents();
-    }
-
-    /**
-     * @codeCoverageIgnore
-     */
     public function close(): void
     {
         if (! is_resource($this->stream)) {
@@ -174,10 +116,69 @@ final class Stream implements StreamInterface, Stringable
         $this->detach();
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
+    public function detach(): mixed
+    {
+        $oldResource = $this->stream;
+
+        $this->stream   = null;
+        $this->meta     = null;
+        $this->readable = null;
+        $this->writable = null;
+        $this->seekable = null;
+        $this->size     = null;
+        $this->isPipe   = null;
+
+        return $oldResource;
+    }
+
+    public function eof(): bool
+    {
+        return ! is_resource($this->stream) || feof($this->stream);
+    }
+
+    public function getContents(): string
+    {
+        $contents = false;
+
+        if (is_resource($this->stream)) {
+            $contents = stream_get_contents($this->stream);
+        }
+
+        if (is_string($contents)) {
+            return $contents;
+        }
+
+        throw new RuntimeException('Could not get contents of stream.');
+    }
+
+    /**
+     * @param null|mixed $key
+     *
+     * @return array<string>|mixed
+     */
+    public function getMetadata($key = null): mixed
+    {
+        // @codeCoverageIgnoreStart
+        if (! is_resource($this->stream)) {
+            return null;
+        }
+        // @codeCoverageIgnoreEnd
+
+        $this->meta = stream_get_meta_data($this->stream);
+
+        if (! is_string($key)) {
+            return $this->meta;
+        }
+
+        return array_key_exists($key, $this->meta) ? $this->meta[$key] : null;
+    }
 
     public function getSize(): ?int
     {
-        if (is_resource($this->stream) && $this->size === null) {
+        if (is_resource($this->stream) && null === $this->size) {
             $stats = fstat($this->stream);
 
             if (is_array($stats) && isset($stats['size'])) {
@@ -188,35 +189,27 @@ final class Stream implements StreamInterface, Stringable
         return $this->size;
     }
 
-
-    public function tell(): int
+    public function isPipe(): bool
     {
-        $position = false;
+        if (null === $this->isPipe) {
+            $this->isPipe = false;
 
-        if (is_resource($this->stream)) {
-            $position = ftell($this->stream);
+            if (is_resource($this->stream)) {
+                $stats = fstat($this->stream);
+
+                if (is_array($stats)) {
+                    $this->isPipe = ($stats['mode'] & self::FSTAT_MODE_S_IFIFO) !== 0;
+                }
+            }
         }
 
-        // @codeCoverageIgnoreStart
-        if ($position === false || $this->isPipe()) {
-            throw new RuntimeException('Could not get the position of the pointer in stream.');
-        }
-        // @codeCoverageIgnoreEnd
-
-        return $position;
+        return $this->isPipe;
     }
-
-
-    public function eof(): bool
-    {
-        return ! is_resource($this->stream) || feof($this->stream);
-    }
-
 
     public function isReadable(): bool
     {
         // @codeCoverageIgnoreStart
-        if ($this->readable !== null) {
+        if (null !== $this->readable) {
             return $this->readable;
         }
         // @codeCoverageIgnoreEnd
@@ -234,10 +227,22 @@ final class Stream implements StreamInterface, Stringable
         return $this->readable;
     }
 
+    public function isSeekable(): bool
+    {
+        if (null === $this->seekable) {
+            $this->seekable = false;
+
+            if (is_resource($this->stream)) {
+                $this->seekable = ! $this->isPipe() && null !== $this->getMetadata('seekable');
+            }
+        }
+
+        return $this->seekable;
+    }
 
     public function isWritable(): bool
     {
-        if ($this->writable === null) {
+        if (null === $this->writable) {
             $this->writable = false;
 
             if (is_resource($this->stream)) {
@@ -256,37 +261,6 @@ final class Stream implements StreamInterface, Stringable
         // @codeCoverageIgnoreEnd
     }
 
-
-    public function isSeekable(): bool
-    {
-        if ($this->seekable === null) {
-            $this->seekable = false;
-
-            if (is_resource($this->stream)) {
-                $this->seekable = ! $this->isPipe() && $this->getMetadata('seekable') !== null;
-            }
-        }
-
-        return $this->seekable;
-    }
-
-
-    public function seek($offset, $whence = SEEK_SET): void
-    {
-        if (! is_resource($this->stream) || ! $this->isSeekable() || fseek($this->stream, $offset, $whence) === -1) {
-            throw new RuntimeException('Could not seek in stream.');
-        }
-    }
-
-
-    public function rewind(): void
-    {
-        if (! is_resource($this->stream) || ! $this->isSeekable() || ! rewind($this->stream)) {
-            throw new RuntimeException('Could not rewind stream.');
-        }
-    }
-
-
     public function read($length): string
     {
         $data = false;
@@ -302,6 +276,37 @@ final class Stream implements StreamInterface, Stringable
         throw new RuntimeException('Could not read from stream.');
     }
 
+    public function rewind(): void
+    {
+        if (! is_resource($this->stream) || ! $this->isSeekable() || ! rewind($this->stream)) {
+            throw new RuntimeException('Could not rewind stream.');
+        }
+    }
+
+    public function seek($offset, $whence = SEEK_SET): void
+    {
+        if (! is_resource($this->stream) || ! $this->isSeekable() || -1 === fseek($this->stream, $offset, $whence)) {
+            throw new RuntimeException('Could not seek in stream.');
+        }
+    }
+
+    public function tell(): int
+    {
+        $position = false;
+
+        if (is_resource($this->stream)) {
+            $position = ftell($this->stream);
+        }
+
+        // @codeCoverageIgnoreStart
+        if (false === $position || $this->isPipe()) {
+            throw new RuntimeException('Could not get the position of the pointer in stream.');
+        }
+        // @codeCoverageIgnoreEnd
+
+        return $position;
+    }
+
     public function write($string): int
     {
         $written = false;
@@ -310,44 +315,27 @@ final class Stream implements StreamInterface, Stringable
             $written = fwrite($this->stream, $string);
         }
 
-        if ($written !== false) {
+        if (false !== $written) {
             $this->size = null;
+
             return $written;
         }
 
         throw new RuntimeException('Could not write to stream.');
     }
+    private ?bool $isPipe = null;
 
+    /**
+     * @var null|array<mixed>
+     */
+    private ?array $meta    = null;
+    private ?bool $readable = null;
+    private ?bool $seekable = null;
+    private ?int $size      = null;
 
-    public function getContents(): string
-    {
-        $contents = false;
-
-        if (is_resource($this->stream)) {
-            $contents = stream_get_contents($this->stream);
-        }
-
-        if (is_string($contents)) {
-            return $contents;
-        }
-
-        throw new RuntimeException('Could not get contents of stream.');
-    }
-
-    public function isPipe(): bool
-    {
-        if ($this->isPipe === null) {
-            $this->isPipe = false;
-
-            if (is_resource($this->stream)) {
-                $stats = fstat($this->stream);
-
-                if (is_array($stats)) {
-                    $this->isPipe = ($stats['mode'] & self::FSTAT_MODE_S_IFIFO) !== 0;
-                }
-            }
-        }
-
-        return $this->isPipe;
-    }
+    /**
+     * @var null|resource
+     */
+    private $stream;
+    private ?bool $writable = null;
 }

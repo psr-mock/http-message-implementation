@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace PsrMock\Psr7;
 
-use Stringable;
-use PsrMock\Psr7\Contracts\UriContract;
-use Psr\Http\Message\UriInterface;
 use InvalidArgumentException;
-use function is_string;
-use function is_int;
+use Psr\Http\Message\UriInterface;
+use PsrMock\Psr7\Contracts\UriContract;
+use Stringable;
 use function in_array;
+use function is_int;
+use function is_string;
 
-final class Uri implements UriContract, Stringable, UriInterface
+final class Uri implements Stringable, UriContract, UriInterface
 {
     public function __construct(
         string $url = '',
@@ -25,63 +25,74 @@ final class Uri implements UriContract, Stringable, UriInterface
         public string $query = '',
         public string $fragment = '',
     ) {
-        if ($url !== '') {
+        if ('' !== $url) {
             $url = parse_url($url);
 
-            if ($url === false || ! isset($url['host']) || ! isset($url['scheme']) || ! in_array($url['scheme'], ['http', 'https'], true)) {
+            if (false === $url || ! isset($url['host']) || ! isset($url['scheme']) || ! in_array($url['scheme'], ['http', 'https'], true)) {
                 throw new InvalidArgumentException('Invalid URL');
             }
 
-            $this->scheme = $url['scheme'] ?? '';
-            $this->host = $url['host'] ?? '';
-            $this->port = $url['port'] ?? null;
-            $this->user = $url['user'] ?? '';
-            $this->pass = $url['pass'] ?? '';
-            $this->path = $url['path'] ?? '';
-            $this->query = $url['query'] ?? '';
+            $this->scheme   = $url['scheme'] ?? '';
+            $this->host     = $url['host'] ?? '';
+            $this->port     = $url['port'] ?? null;
+            $this->user     = $url['user'] ?? '';
+            $this->pass     = $url['pass'] ?? '';
+            $this->path     = $url['path'] ?? '';
+            $this->query    = $url['query'] ?? '';
             $this->fragment = $url['fragment'] ?? '';
         }
     }
 
-    public function getScheme(): string
+    public function __toString(): string
     {
-        return $this->scheme;
+        $built = '';
+
+        if ('' !== $this->scheme) {
+            $built .= $this->scheme . '://';
+        }
+
+        if ('' !== $this->user) {
+            $built .= $this->user;
+
+            if ('' !== $this->pass) {
+                $built .= ':' . $this->pass;
+            }
+
+            $built .= '@';
+        }
+
+        if ('' !== $this->host) {
+            $built .= $this->host;
+        }
+
+        if (null !== $this->port) {
+            $built .= ':' . $this->port;
+        }
+
+        if ('' !== $this->path) {
+            $built .= $this->path;
+        }
+
+        if ('' !== $this->query) {
+            $built .= '?' . $this->query;
+        }
+
+        if ('' !== $this->fragment) {
+            $built .= '#' . $this->fragment;
+        }
+
+        return $built;
     }
 
     public function getAuthority(): string
     {
         $userInfo = $this->getUserInfo();
 
-        if ($userInfo !== '') {
+        if ('' !== $userInfo) {
             $userInfo .= '@';
         }
 
-        return $userInfo . $this->getHost() . ($this->getPort() !== null ? ':' . $this->getPort() : '');
-    }
-
-    public function getUserInfo(): string
-    {
-        return $this->user . (strlen($this->pass) > 0 ? ':' . $this->pass : '');
-    }
-
-    public function getHost(): string
-    {
-        return $this->host;
-    }
-
-    public function getPort(): ?int
-    {
-        return $this->port;
-    }
-
-    public function getPath(): string
-    {
-        return $this->path;
-    }
-
-    public function getQuery(): string
-    {
-        return $this->query;
+        return $userInfo . $this->getHost() . (null !== $this->getPort() ? ':' . $this->getPort() : '');
     }
 
     public function getFragment(): string
@@ -89,30 +100,45 @@ final class Uri implements UriContract, Stringable, UriInterface
         return $this->fragment;
     }
 
-    public function withScheme($scheme): self
+    public function getHost(): string
     {
-        if (! is_string($scheme)) {
-            throw new InvalidArgumentException('Scheme must be a string');
-        }
-
-        $clone = clone $this;
-        $clone->scheme = $scheme;
-        return $clone;
+        return $this->host;
     }
 
-    public function withUserInfo($user, $password = null): self
+    public function getPath(): string
     {
-        if (! is_string($user)) {
-            throw new InvalidArgumentException('User must be a string');
+        return $this->path;
+    }
+
+    public function getPort(): ?int
+    {
+        return $this->port;
+    }
+
+    public function getQuery(): string
+    {
+        return $this->query;
+    }
+
+    public function getScheme(): string
+    {
+        return $this->scheme;
+    }
+
+    public function getUserInfo(): string
+    {
+        return $this->user . (mb_strlen($this->pass) > 0 ? ':' . $this->pass : '');
+    }
+
+    public function withFragment($fragment): self
+    {
+        if (! is_string($fragment)) {
+            throw new InvalidArgumentException('Fragment must be a string');
         }
 
-        if ($password !== null && ! is_string($password)) {
-            throw new InvalidArgumentException('Password must be a string');
-        }
+        $clone           = clone $this;
+        $clone->fragment = $fragment;
 
-        $clone = clone $this;
-        $clone->user = $user;
-        $clone->pass = $password ?? '';
         return $clone;
     }
 
@@ -122,8 +148,21 @@ final class Uri implements UriContract, Stringable, UriInterface
             throw new InvalidArgumentException('Host must be a string');
         }
 
-        $clone = clone $this;
+        $clone       = clone $this;
         $clone->host = $host;
+
+        return $clone;
+    }
+
+    public function withPath($path): self
+    {
+        if (! is_string($path)) {
+            throw new InvalidArgumentException('Path must be a string');
+        }
+
+        $clone       = clone $this;
+        $clone->path = $path;
+
         return $clone;
     }
 
@@ -137,19 +176,9 @@ final class Uri implements UriContract, Stringable, UriInterface
             throw new InvalidArgumentException('Port must be between 1 and 65535');
         }
 
-        $clone = clone $this;
+        $clone       = clone $this;
         $clone->port = $port;
-        return $clone;
-    }
 
-    public function withPath($path): self
-    {
-        if (! is_string($path)) {
-            throw new InvalidArgumentException('Path must be a string');
-        }
-
-        $clone = clone $this;
-        $clone->path = $path;
         return $clone;
     }
 
@@ -159,60 +188,38 @@ final class Uri implements UriContract, Stringable, UriInterface
             throw new InvalidArgumentException('Query must be a string');
         }
 
-        $clone = clone $this;
+        $clone        = clone $this;
         $clone->query = $query;
+
         return $clone;
     }
 
-    public function withFragment($fragment): self
+    public function withScheme($scheme): self
     {
-        if (! is_string($fragment)) {
-            throw new InvalidArgumentException('Fragment must be a string');
+        if (! is_string($scheme)) {
+            throw new InvalidArgumentException('Scheme must be a string');
         }
 
-        $clone = clone $this;
-        $clone->fragment = $fragment;
+        $clone         = clone $this;
+        $clone->scheme = $scheme;
+
         return $clone;
     }
 
-    public function __toString(): string
+    public function withUserInfo($user, $password = null): self
     {
-        $built = '';
-
-        if ($this->scheme !== '') {
-            $built .= $this->scheme . '://';
+        if (! is_string($user)) {
+            throw new InvalidArgumentException('User must be a string');
         }
 
-        if ($this->user !== '') {
-            $built .= $this->user;
-
-            if ($this->pass !== '') {
-                $built .= ':' . $this->pass;
-            }
-
-            $built .= '@';
+        if (null !== $password && ! is_string($password)) {
+            throw new InvalidArgumentException('Password must be a string');
         }
 
-        if ($this->host !== '') {
-            $built .= $this->host;
-        }
+        $clone       = clone $this;
+        $clone->user = $user;
+        $clone->pass = $password ?? '';
 
-        if ($this->port !== null) {
-            $built .= ':' . $this->port;
-        }
-
-        if ($this->path !== '') {
-            $built .= $this->path;
-        }
-
-        if ($this->query !== '') {
-            $built .= '?' . $this->query;
-        }
-
-        if ($this->fragment !== '') {
-            $built .= '#' . $this->fragment;
-        }
-
-        return $built;
+        return $clone;
     }
 }

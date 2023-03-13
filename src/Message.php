@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace PsrMock\Psr7;
 
-use Psr\Http\Message\MessageInterface;
-use Psr\Http\Message\StreamInterface;
+use InvalidArgumentException;
+use Psr\Http\Message\{MessageInterface, StreamInterface};
 use PsrMock\Psr7\Collections\Headers;
 use PsrMock\Psr7\Contracts\MessageContract;
+use function is_array;
+use function is_string;
 
 abstract class Message implements MessageContract, MessageInterface
 {
     /**
-     * @param string $protocolVersion
-     * @param null|Headers $headers
+     * @param string               $protocolVersion
+     * @param null|Headers         $headers
      * @param null|StreamInterface $stream
-     *
-     * @return void
      */
     public function __construct(
         private string $protocolVersion = '1.1',
@@ -25,43 +25,76 @@ abstract class Message implements MessageContract, MessageInterface
     ) {
     }
 
-    public function getProtocolVersion(): string
+    private function headers(): Headers
     {
-        return $this->protocolVersion;
+        return $this->headers ??= new Headers();
     }
 
-    public function withProtocolVersion($version): static
+    final public function getBody(): StreamInterface
     {
-        if (! is_string($version)) {
-            throw new \InvalidArgumentException('Protocol version must be a string');
+        if (null === $this->stream) {
+            $this->stream = new Stream();
         }
 
-        $clone = clone $this;
-        $clone->protocolVersion = strval($version);
-        return $clone;
+        return $this->stream;
     }
 
-    public function getHeaders(): array
-    {
-        return $this->headers()->all();
-    }
-
-    public function hasHeader($name): bool
-    {
-        return $this->headers()->has($name);
-    }
-
-    public function getHeader($name): array
+    final public function getHeader($name): array
     {
         return $this->headers()->get($name);
     }
 
-    public function getHeaderLine($name): string
+    final public function getHeaderLine($name): string
     {
         return $this->headers()->getString($name);
     }
 
-    public function withHeader($name, $value): static
+    final public function getHeaders(): array
+    {
+        return $this->headers()->all();
+    }
+
+    final public function getProtocolVersion(): string
+    {
+        return $this->protocolVersion;
+    }
+
+    final public function hasHeader($name): bool
+    {
+        return $this->headers()->has($name);
+    }
+
+    final public function withAddedHeader($name, $value): static
+    {
+        $clone = clone $this;
+
+        if (is_array($value)) {
+            foreach ($value as $v) {
+                if (is_string($v)) {
+                    $clone->headers()->add($name, $v);
+                }
+            }
+        } elseif (is_string($value)) {
+            $clone->headers()->add($name, $value);
+        }
+
+        return $clone;
+    }
+
+    final public function withBody(
+        StreamInterface $body,
+    ): static {
+        if ($body === $this->stream) {
+            return $this;
+        }
+
+        $clone         = clone $this;
+        $clone->stream = $body;
+
+        return $clone;
+    }
+
+    final public function withHeader($name, $value): static
     {
         $clone = clone $this;
 
@@ -76,7 +109,7 @@ abstract class Message implements MessageContract, MessageInterface
         return $clone;
     }
 
-    public function withHeaders(array $headers): static
+    final public function withHeaders(array $headers): static
     {
         $clone = clone $this;
 
@@ -97,53 +130,23 @@ abstract class Message implements MessageContract, MessageInterface
         return $clone;
     }
 
-    public function withAddedHeader($name, $value): static
-    {
-        $clone = clone $this;
-
-        if (is_array($value)) {
-            foreach ($value as $v) {
-                if (is_string($v)) {
-                    $clone->headers()->add($name, $v);
-                }
-            }
-        } elseif (is_string($value)) {
-            $clone->headers()->add($name, $value);
-        }
-
-        return $clone;
-    }
-
-    public function withoutHeader($name): static
+    final public function withoutHeader($name): static
     {
         $clone = clone $this;
         $clone->headers()->remove($name);
+
         return $clone;
     }
 
-    public function getBody(): StreamInterface
+    final public function withProtocolVersion($version): static
     {
-        if (null === $this->stream) {
-            $this->stream = new Stream();
+        if (! is_string($version)) {
+            throw new InvalidArgumentException('Protocol version must be a string');
         }
 
-        return $this->stream;
-    }
+        $clone                  = clone $this;
+        $clone->protocolVersion = $version;
 
-    public function withBody(
-        StreamInterface $body
-    ): static {
-        if ($body === $this->stream) {
-            return $this;
-        }
-
-        $clone = clone $this;
-        $clone->stream = $body;
         return $clone;
-    }
-
-    private function headers(): Headers
-    {
-        return $this->headers ??= new Headers();
     }
 }

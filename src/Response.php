@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace PsrMock\Psr7;
 
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
+use InvalidArgumentException;
+use Psr\Http\Message\{ResponseInterface, StreamInterface};
 use PsrMock\Psr7\Collections\Headers;
 use PsrMock\Psr7\Contracts\ResponseContract;
+use function is_int;
+use function is_string;
 
 final class Response extends Message implements ResponseContract, ResponseInterface
 {
@@ -21,6 +23,11 @@ final class Response extends Message implements ResponseContract, ResponseInterf
         parent::__construct($this->protocolVersion, $this->headers, $this->stream);
     }
 
+    public function getReasonPhrase(): string
+    {
+        return $this->reasonPhrase;
+    }
+
     public function getStatusCode(): int
     {
         return $this->statusCode;
@@ -29,21 +36,17 @@ final class Response extends Message implements ResponseContract, ResponseInterf
     public function withStatus($code, $reasonPhrase = ''): ResponseInterface
     {
         if (! is_int($code)) {
-            throw new \InvalidArgumentException('Status code must be an integer');
+            throw new InvalidArgumentException('Status code must be an integer');
         }
 
         if (! is_string($reasonPhrase)) {
-            throw new \InvalidArgumentException('Reason phrase must be a string');
+            throw new InvalidArgumentException('Reason phrase must be a string');
         }
 
-        $clone = clone $this;
-        $clone->statusCode = $code;
+        $clone               = clone $this;
+        $clone->statusCode   = $code;
         $clone->reasonPhrase = $reasonPhrase;
-        return $clone;
-    }
 
-    public function getReasonPhrase(): string
-    {
-        return $this->reasonPhrase;
+        return $clone;
     }
 }

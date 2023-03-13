@@ -14,27 +14,27 @@ interface StreamContract extends StreamInterface
 
     public function detach(): mixed;
 
-    public function getSize(): ?int;
-
-    public function tell(): int;
-
     public function eof(): bool;
-
-    public function isSeekable(): bool;
-
-    public function seek($offset, $whence = SEEK_SET): void;
-
-    public function rewind(): void;
-
-    public function isWritable(): bool;
-
-    public function write($string): int;
-
-    public function isReadable(): bool;
-
-    public function read($length): string;
 
     public function getContents(): string;
 
     public function getMetadata($key = null): mixed;
+
+    public function getSize(): ?int;
+
+    public function isReadable(): bool;
+
+    public function isSeekable(): bool;
+
+    public function isWritable(): bool;
+
+    public function read($length): string;
+
+    public function rewind(): void;
+
+    public function seek($offset, $whence = SEEK_SET): void;
+
+    public function tell(): int;
+
+    public function write($string): int;
 }

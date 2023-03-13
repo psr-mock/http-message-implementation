@@ -8,13 +8,15 @@ use Stringable;
 
 final class Header implements Stringable
 {
-    private string $name;
-    private string $value;
-
     public function __construct(string $name, string $value)
     {
-        $this->name = $name;
+        $this->name  = $name;
         $this->value = $value;
+    }
+
+    public function __toString(): string
+    {
+        return $this->name . ': ' . $this->value;
     }
 
     public function getName(): string
@@ -31,9 +33,6 @@ final class Header implements Stringable
     {
         $this->value = $value;
     }
-
-    public function __toString(): string
-    {
-        return $this->name . ': ' . $this->value;
-    }
+    private string $name;
+    private string $value;
 }
