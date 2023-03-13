@@ -6,11 +6,14 @@ namespace PsrMock\Psr7\Collections;
 
 use PsrMock\Psr7\Entities\Header;
 
+/**
+ * @psalm-api
+ */
 final class Headers
 {
     private function normalizeHeaderName(string $name): string
     {
-        return mb_strtolower(trim($name));
+        return strtolower(trim($name));
     }
 
     public function add(string $name, string $value): void
@@ -48,8 +51,6 @@ final class Headers
     }
 
     /**
-     * @param string $name
-     *
      * @return string[]
      */
     public function get(string $name): array
@@ -67,16 +68,21 @@ final class Headers
     }
 
     /**
-     * @param string $name
      *
-     * @return Header[][]
+     * @return Header[]
+     * @palm-suppress MixedInferredReturnType
      */
     public function getHeader(string $name): array
     {
-        $name = $this->normalizeHeaderName($name);
-        $response = $this->headers[$name] ?? [];
+        $name     = $this->normalizeHeaderName($name);
+        $headers  = $this->headers[$name] ?? [];
+        $response = [];
 
-        /** @var Header[][] $response */
+        foreach ($headers as $header) {
+            if ($header instanceof Header) {
+                $response[] = $header;
+            }
+        }
 
         return $response;
     }

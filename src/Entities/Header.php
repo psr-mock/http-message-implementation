@@ -6,12 +6,13 @@ namespace PsrMock\Psr7\Entities;
 
 use Stringable;
 
+/**
+ * @psalm-api
+ */
 final class Header implements Stringable
 {
-    public function __construct(string $name, string $value)
+    public function __construct(private string $name, private string $value)
     {
-        $this->name  = $name;
-        $this->value = $value;
     }
 
     public function __toString(): string
@@ -33,6 +34,4 @@ final class Header implements Stringable
     {
         $this->value = $value;
     }
-    private string $name;
-    private string $value;
 }

@@ -11,7 +11,11 @@ use Stringable;
 use function in_array;
 use function is_int;
 use function is_string;
+use function strlen;
 
+/**
+ * @psalm-api
+ */
 final class Uri implements Stringable, UriContract, UriInterface
 {
     public function __construct(
@@ -92,7 +96,7 @@ final class Uri implements Stringable, UriContract, UriInterface
             $userInfo .= '@';
         }
 
-        return $userInfo . $this->getHost() . (null !== $this->getPort() ? ':' . $this->getPort() : '');
+        return $userInfo . $this->host . (null !== $this->port ? ':' . $this->port : '');
     }
 
     public function getFragment(): string
@@ -127,7 +131,7 @@ final class Uri implements Stringable, UriContract, UriInterface
 
     public function getUserInfo(): string
     {
-        return $this->user . (mb_strlen($this->pass) > 0 ? ':' . $this->pass : '');
+        return $this->user . (strlen($this->pass) > 0 ? ':' . $this->pass : '');
     }
 
     public function withFragment($fragment): self

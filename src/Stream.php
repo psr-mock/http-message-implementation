@@ -7,6 +7,7 @@ namespace PsrMock\Psr7;
 use const SEEK_SET;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
+use PsrMock\Psr7\Contracts\StreamContract;
 use RuntimeException;
 
 use Stringable;
@@ -27,17 +28,18 @@ use function rewind;
 use function stream_get_contents;
 use function stream_get_meta_data;
 
-final class Stream implements StreamInterface, Stringable
+/**
+ * @psalm-api
+ */
+final class Stream implements StreamContract, StreamInterface, Stringable
 {
-    public const FSTAT_MODE_S_IFIFO = 0o010000;
-
     /**
-     * @param resource|string $stream A PHP resource handle.
+     * @param resource|string|null $stream A PHP resource handle.
      *
      * @throws InvalidArgumentException If argument is not a resource.
      */
     public function __construct(
-        $stream = null,
+        private mixed $stream = null,
     ) {
         $resource = is_resource($stream) ? $stream : fopen('php://temp', 'r+wb');
 
@@ -131,6 +133,10 @@ final class Stream implements StreamInterface, Stringable
         $this->size     = null;
         $this->isPipe   = null;
 
+        if (! is_resource($oldResource)) {
+            return null;
+        }
+
         return $oldResource;
     }
 
@@ -173,7 +179,11 @@ final class Stream implements StreamInterface, Stringable
             return $this->meta;
         }
 
-        return array_key_exists($key, $this->meta) ? $this->meta[$key] : null;
+        if (array_key_exists($key, $this->meta)) {
+            return $this->meta[$key];
+        }
+
+        return null;
     }
 
     public function getSize(): ?int
@@ -198,7 +208,7 @@ final class Stream implements StreamInterface, Stringable
                 $stats = fstat($this->stream);
 
                 if (is_array($stats)) {
-                    $this->isPipe = ($stats['mode'] & self::FSTAT_MODE_S_IFIFO) !== 0;
+                    $this->isPipe = ($stats['mode'] & 0o010000) !== 0;
                 }
             }
         }
@@ -329,13 +339,8 @@ final class Stream implements StreamInterface, Stringable
      * @var null|array<mixed>
      */
     private ?array $meta    = null;
-    private ?bool $readable = null;
-    private ?bool $seekable = null;
-    private ?int $size      = null;
-
-    /**
-     * @var null|resource
-     */
-    private $stream;
-    private ?bool $writable = null;
+    private ?bool  $readable = null;
+    private ?bool  $seekable = null;
+    private ?int   $size      = null;
+    private ?bool  $writable = null;
 }

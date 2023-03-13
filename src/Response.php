@@ -11,6 +11,9 @@ use PsrMock\Psr7\Contracts\ResponseContract;
 use function is_int;
 use function is_string;
 
+/**
+ * @psalm-api
+ */
 final class Response extends Message implements ResponseContract, ResponseInterface
 {
     public function __construct(

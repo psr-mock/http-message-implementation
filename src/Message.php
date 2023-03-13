@@ -13,11 +13,6 @@ use function is_string;
 
 abstract class Message implements MessageContract, MessageInterface
 {
-    /**
-     * @param string               $protocolVersion
-     * @param null|Headers         $headers
-     * @param null|StreamInterface $stream
-     */
     public function __construct(
         private string $protocolVersion = '1.1',
         private ?Headers $headers = null,

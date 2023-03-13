@@ -10,6 +10,9 @@ use PsrMock\Psr7\Collections\Headers;
 use PsrMock\Psr7\Contracts\RequestContract;
 use function is_string;
 
+/**
+ * @psalm-api
+ */
 final class Request extends Message implements RequestContract, RequestInterface
 {
     public function __construct(
