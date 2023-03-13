@@ -1,5 +1,6 @@
 <?php
 
+use Psr\Http\Message\StreamInterface;
 use PsrMock\Psr7\Stream;
 
 it('can get the stream contents', function () {
@@ -143,4 +144,33 @@ test('getMetadata() returns null with a bad key', function () {
 
     expect($stream->getMetadata(uniqid()))
         ->toBeNull();
+});
+
+it('should create a new stream from a file', function () {
+    $file = __DIR__ . '/StreamTest.tmp';
+    $stream = new Stream(fopen($file, 'w'));
+
+    expect($stream)
+        ->toBeInstanceOf(StreamInterface::class);
+
+    expect($stream->getMetadata('uri'))
+        ->toBe($file);
+});
+
+it('should create a new stream from a resource', function () {
+    $resource = fopen('php://memory', "rw+");
+    fwrite($resource, 'Hello, world!');
+
+    $stream = new Stream(stream_get_contents($resource, null, 0));
+
+    expect($stream)
+        ->toBeInstanceOf(StreamInterface::class);
+
+    expect($stream->getContents())
+        ->toBe('Hello, world!');
+
+    expect((string) $stream)
+        ->toBe('Hello, world!');
+
+    fclose($resource);
 });
