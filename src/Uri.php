@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
 use PsrMock\Psr7\Contracts\UriContract;
 use Stringable;
+
 use function in_array;
 use function is_int;
 use function is_string;

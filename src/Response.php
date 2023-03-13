@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use Psr\Http\Message\{ResponseInterface, StreamInterface};
 use PsrMock\Psr7\Collections\Headers;
 use PsrMock\Psr7\Contracts\ResponseContract;
+
 use function is_int;
 use function is_string;
 

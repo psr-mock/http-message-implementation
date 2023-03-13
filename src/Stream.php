@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace PsrMock\Psr7;
 
 use const SEEK_SET;
+
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 use PsrMock\Psr7\Contracts\StreamContract;
 use RuntimeException;
-
 use Stringable;
+
 use function array_key_exists;
 use function fclose;
 use function feof;
@@ -24,7 +25,6 @@ use function is_resource;
 use function is_string;
 use function pclose;
 use function rewind;
-
 use function stream_get_contents;
 use function stream_get_meta_data;
 

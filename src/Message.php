@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use Psr\Http\Message\{MessageInterface, StreamInterface};
 use PsrMock\Psr7\Collections\Headers;
 use PsrMock\Psr7\Contracts\MessageContract;
+
 use function is_array;
 use function is_string;
 
