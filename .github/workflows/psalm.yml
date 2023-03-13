@@ -44,4 +44,4 @@ jobs:
 
       - run: composer install --no-progress --prefer-dist --optimize-autoloader
 
-      - run: vendor/bin/php-cs-fixer fix src --dry-run --diff
+      - run: vendor/bin/psalm
