@@ -5,23 +5,35 @@ declare(strict_types=1);
 namespace PsrMock\Psr7;
 
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
+use PsrMock\Psr7\Collections\Headers;
+use PsrMock\Psr7\Contracts\RequestContract;
 
-final class Request extends Message implements RequestInterface
+final class Request extends Message implements RequestContract, RequestInterface
 {
     public string $requestTarget = '';
 
     public function __construct(
-        public string $method,
-        public UriInterface $uri
+        private string $method = 'GET',
+        private UriInterface|string $uri = '',
+        private string $protocolVersion = '1.1',
+        private ?Headers $headers = null,
+        private ?StreamInterface $stream = null,
     ) {
-        parent::__construct();
+        $this->uri = is_string($this->uri) ? new Uri($this->uri) : $this->uri;
+        parent::__construct($this->protocolVersion, $this->headers, $this->stream);
     }
 
-    public function withRequestTarget($requestTarget): self
+    public function withRequestTarget(mixed $requestTarget): static
     {
+        if (! is_string($requestTarget)) {
+            throw new \InvalidArgumentException('Request target must be a string');
+        }
+
         $clone = clone $this;
         $clone->requestTarget = $requestTarget;
+
         return $clone;
     }
 
@@ -30,7 +42,7 @@ final class Request extends Message implements RequestInterface
         return $this->requestTarget;
     }
 
-    public function withMethod($method): self
+    public function withMethod($method): static
     {
         $clone = clone $this;
         $clone->method = $method;
@@ -42,7 +54,7 @@ final class Request extends Message implements RequestInterface
         return $this->method;
     }
 
-    public function withUri($uri, $preserveHost = false): self
+    public function withUri(UriInterface $uri, $preserveHost = false): static
     {
         $clone = clone $this;
         $clone->uri = $uri;
@@ -51,6 +63,12 @@ final class Request extends Message implements RequestInterface
 
     public function getUri(): UriInterface
     {
+        // @codeCoverageIgnoreStart
+        if (is_string($this->uri)) {
+            $this->uri = new Uri($this->uri);
+        }
+        // @codeCoverageIgnoreEnd
+
         return $this->uri;
     }
 }

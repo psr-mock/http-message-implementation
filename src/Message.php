@@ -6,101 +6,144 @@ namespace PsrMock\Psr7;
 
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\StreamInterface;
+use PsrMock\Psr7\Collections\Headers;
+use PsrMock\Psr7\Contracts\MessageContract;
 
-abstract class Message implements MessageInterface
+abstract class Message implements MessageContract, MessageInterface
 {
-    private string $protocolVersion = '1.1';
-    private array $headers = [];
-    private StreamInterface $body;
-
-    public static function create(
-        string $protocolVersion = '1.1',
-        array $headers = [],
-        ?StreamInterface $body = null
-    ): static {
-        $message = new static();
-        $message->protocolVersion = $protocolVersion;
-        $message->headers = $headers;
-        $message->body = $body ?? new Stream();
-
-        return $message;
+    /**
+     * @param string $protocolVersion
+     * @param null|Headers $headers
+     * @param null|StreamInterface $stream
+     *
+     * @return void
+     */
+    public function __construct(
+        private string $protocolVersion = '1.1',
+        private ?Headers $headers = null,
+        private ?StreamInterface $stream = null,
+    ) {
     }
 
-    public function __construct() {
-        $this->body = new Stream();
-    }
-
-    public function getProtocolVersion()
+    public function getProtocolVersion(): string
     {
         return $this->protocolVersion;
     }
 
-    public function withProtocolVersion($version): self
+    public function withProtocolVersion($version): static
     {
+        if (! is_string($version)) {
+            throw new \InvalidArgumentException('Protocol version must be a string');
+        }
+
         $clone = clone $this;
-        $clone->protocolVersion = $version;
+        $clone->protocolVersion = strval($version);
         return $clone;
     }
 
     public function getHeaders(): array
     {
-        return $this->headers;
+        return $this->headers()->all();
     }
 
     public function hasHeader($name): bool
     {
-        return isset($this->headers[$name]);
+        return $this->headers()->has($name);
     }
 
     public function getHeader($name): array
     {
-        return $this->headers[$name] ?? [];
+        return $this->headers()->get($name);
     }
 
     public function getHeaderLine($name): string
     {
-        return implode(', ', $this->getHeader($name));
+        return $this->headers()->getString($name);
     }
 
-    public function withHeader($name, $value): self
+    public function withHeader($name, $value): static
     {
         $clone = clone $this;
-        $clone->headers[$name] = $value;
+
+        if (is_array($value)) {
+            foreach ($value as $v) {
+                $clone->headers()->add($name, $v);
+            }
+        } elseif (is_string($value)) {
+            $clone->headers()->add($name, $value);
+        }
+
         return $clone;
     }
 
-    public function withHeaders($headers): self
+    public function withHeaders(array $headers): static
     {
         $clone = clone $this;
-        $clone->headers = $headers;
+
+        foreach ($headers as $name => $value) {
+            if (! is_string($name)) {
+                continue;
+            }
+
+            if (is_array($value)) {
+                foreach ($value as $v) {
+                    $clone->headers()->add($name, $v);
+                }
+            } elseif (is_string($value)) {
+                $clone->headers()->add($name, $value);
+            }
+        }
+
         return $clone;
     }
 
-    public function withAddedHeader($name, $value): self
+    public function withAddedHeader($name, $value): static
     {
         $clone = clone $this;
-        $clone->headers[$name] ??= [];
-        $clone->headers[$name][] = $value;
+
+        if (is_array($value)) {
+            foreach ($value as $v) {
+                if (is_string($v)) {
+                    $clone->headers()->add($name, $v);
+                }
+            }
+        } elseif (is_string($value)) {
+            $clone->headers()->add($name, $value);
+        }
+
         return $clone;
     }
 
-    public function withoutHeader($name): self
+    public function withoutHeader($name): static
     {
         $clone = clone $this;
-        unset($clone->headers[$name]);
+        $clone->headers()->remove($name);
         return $clone;
     }
 
     public function getBody(): StreamInterface
     {
-        return $this->body;
+        if (null === $this->stream) {
+            $this->stream = new Stream();
+        }
+
+        return $this->stream;
     }
 
     public function withBody(
         StreamInterface $body
-    ) {
+    ): static {
+        if ($body === $this->stream) {
+            return $this;
+        }
+
         $clone = clone $this;
-        $clone->body = $body;
+        $clone->stream = $body;
         return $clone;
+    }
+
+    private function headers(): Headers
+    {
+        return $this->headers ??= new Headers();
     }
 }
