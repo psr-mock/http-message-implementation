@@ -47,5 +47,6 @@ jobs:
       - run: vendor/bin/pest --order-by random --coverage --min=100 --ci
 
       - uses: codecov/codecov-action@v3
-        directory: ./coverage/
-        flags: unittests
+        with:
+          directory: ./coverage/
+          flags: unittests
