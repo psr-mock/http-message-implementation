@@ -31,7 +31,7 @@ final class Headers
     }
 
     /**
-     * @return string[][]
+     * @return string[]|string[][]
      */
     public function all(): array
     {
@@ -45,6 +45,10 @@ final class Headers
                 /** @var Header $result */
                 $response[$result->getName()][] = $result->getValue();
             }
+
+            if (count($response[$result->getName()]) === 1) {
+                $response[$result->getName()] = $response[$result->getName()][0];
+            }
         }
 
         return $response;
@@ -53,9 +57,9 @@ final class Headers
     /**
      * @param string $name The header name.
      *
-     * @return string[]
+     * @return string|string[]
      */
-    public function get(string $name): array
+    public function get(string $name): string|array
     {
         $name     = $this->normalizeHeaderName($name);
         $header   = $this->headers[$name] ?? [];
@@ -66,6 +70,10 @@ final class Headers
             $response[] = $value->getValue();
         }
 
+        if (count($response) === 1) {
+            $response = $response[0];
+        }
+
         return $response;
     }
 
@@ -74,9 +82,9 @@ final class Headers
      *
      * @param string $name The header name.
      *
-     * @return Header[]
+     * @return Header|Header[]
      */
-    public function getHeader(string $name): array
+    public function getHeader(string $name): Header|array
     {
         $name     = $this->normalizeHeaderName($name);
         $headers  = $this->headers[$name] ?? [];
@@ -86,6 +94,10 @@ final class Headers
             if ($header instanceof Header) {
                 $response[] = $header;
             }
+        }
+
+        if (count($response) === 1) {
+            $response = $response[0];
         }
 
         return $response;
