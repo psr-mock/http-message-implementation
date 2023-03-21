@@ -93,6 +93,7 @@ abstract class Message implements MessageContract, MessageInterface
     final public function withHeader($name, $value): static
     {
         $clone = clone $this->withoutHeader($name);
+
         return $clone->withAddedHeader($name, $value);
     }
 

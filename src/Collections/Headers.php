@@ -11,6 +11,11 @@ use PsrMock\Psr7\Entities\Header;
  */
 final class Headers
 {
+    /**
+     * @var array<string, array<Header>>
+     */
+    private array $headers = [];
+
     private function normalizeHeaderName(string $name): string
     {
         return strtolower(trim($name));
@@ -120,9 +125,4 @@ final class Headers
         $normalized                 = $this->normalizeHeaderName($header->getName());
         $this->headers[$normalized] = [$header];
     }
-
-    /**
-     * @var array<string, array<Header>>
-     */
-    private array $headers = [];
 }

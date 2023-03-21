@@ -16,6 +16,8 @@ use function is_string;
  */
 final class Request extends Message implements RequestContract, RequestInterface
 {
+    public string $requestTarget = '';
+
     public function __construct(
         private string $method = 'GET',
         private UriInterface | string $uri = '',
@@ -75,5 +77,4 @@ final class Request extends Message implements RequestContract, RequestInterface
 
         return $clone;
     }
-    public string $requestTarget = '';
 }

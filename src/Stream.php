@@ -33,6 +33,17 @@ use function stream_get_meta_data;
  */
 final class Stream implements StreamContract, StreamInterface, Stringable
 {
+    private ?bool $isPipe = null;
+
+    /**
+     * @var null|array<mixed>
+     */
+    private ?array $meta      = null;
+    private ?bool  $readable  = null;
+    private ?bool  $seekable  = null;
+    private ?int   $size      = null;
+    private ?bool  $writable  = null;
+
     /**
      * @param null|resource|string $stream A PHP resource handle.
      *
@@ -333,14 +344,4 @@ final class Stream implements StreamContract, StreamInterface, Stringable
 
         throw new RuntimeException('Could not write to stream.');
     }
-    private ?bool $isPipe = null;
-
-    /**
-     * @var null|array<mixed>
-     */
-    private ?array $meta      = null;
-    private ?bool  $readable  = null;
-    private ?bool  $seekable  = null;
-    private ?int   $size      = null;
-    private ?bool  $writable  = null;
 }
