@@ -85,7 +85,7 @@ it('should allow adding headers', function () {
         ->toBe(['Content-Type' => ['text/plain', 'charset=utf-8']]);
 
     expect($message->getHeaderLine('Content-Type'))
-        ->toBe('text/plain, charset=utf-8');
+        ->toBe('text/plain,charset=utf-8');
 
     $message = new Request();
     $message = $message->withAddedHeader('Content-Type', ['text/plain', 'charset=utf-8']);

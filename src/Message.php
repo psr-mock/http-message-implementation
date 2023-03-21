@@ -92,17 +92,8 @@ abstract class Message implements MessageContract, MessageInterface
 
     final public function withHeader($name, $value): static
     {
-        $clone = clone $this;
-
-        if (is_array($value)) {
-            foreach ($value as $v) {
-                $clone->headers()->add($name, $v);
-            }
-        } elseif (is_string($value)) {
-            $clone->headers()->add($name, $value);
-        }
-
-        return $clone;
+        $clone = clone $this->withoutHeader($name);
+        return $clone->withAddedHeader($name, $value);
     }
 
     final public function withHeaders(array $headers): static
@@ -113,6 +104,8 @@ abstract class Message implements MessageContract, MessageInterface
             if (! is_string($name)) {
                 continue;
             }
+
+            $clone->headers()->remove($name);
 
             if (is_array($value)) {
                 foreach ($value as $v) {
