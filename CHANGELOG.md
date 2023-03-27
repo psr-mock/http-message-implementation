@@ -6,11 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-### TODO
-
--   Add ServerRequestInterface mocking
--   Add UploadedFileInterface mocking
+## [1.0.0] - 2023-27-03
 
 ### Added
 
--   First release of mocking library w/ PSR-7.
+-   First release.
