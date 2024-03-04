@@ -28,7 +28,7 @@ abstract class Message implements MessageContract, MessageInterface
 
     final public function getBody(): StreamInterface
     {
-        if (null === $this->stream) {
+        if (! $this->stream instanceof StreamInterface) {
             $this->stream = new Stream();
         }
 
