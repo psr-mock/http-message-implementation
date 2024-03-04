@@ -4,7 +4,7 @@ Lightweight PSR-7 HTTP Message implementation provider tailored to simplify mock
 
 ## Requirements
 
--   PHP 8.0+
+-   PHP 8.1+
 
 ## Installation
 
